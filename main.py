@@ -157,8 +157,8 @@ def process_video(input_video, output_video, model):
 if __name__ == "__main__":
     # Настройки
     FILE_NAME = "spb-cam1-short-001.mp4"
-    INPUT_VIDEO = f"data\input\{FILE_NAME}"
-    OUTPUT_VIDEO = f"data\output\out-{FILE_NAME}_{time.time()}.mp4"   
+    INPUT_VIDEO = f"data/input/{FILE_NAME}"
+    OUTPUT_VIDEO = f"data/output/out-{FILE_NAME}_{time.time()}.mp4"   
     WEIGHTS_PATH = "./weights/deeplabv3_resnet101_coco-586e9e4e.pth"  # 
     
     # Проверка существования входного файла
