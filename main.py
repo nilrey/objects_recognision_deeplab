@@ -3,37 +3,42 @@ import time
 import torch
 import cv2
 import numpy as np
+import torch.hub
 from torchvision import transforms
 from PIL import Image
 
-# ========== 1. НАСТРОЙКА ЛОКАЛЬНОГО ХРАНЕНИЯ МОДЕЛИ ==========
-# Раскомментируйте нужный вариант:
-
-# Вариант 1: Перенаправление кеша в папку проекта
-# os.environ['TORCH_HOME'] = './models'
-
-# Вариант 2: Ручная загрузка из локального файла (рекомендуется)
 from torchvision.models.segmentation import deeplabv3_resnet101
 
-def load_model(weights_path='./weights/deeplabv3_resnet101_coco-586e9e4e.pth'):
+def load_model(weights_path='./weights/deeplabv3_resnet101_coco-586e9e4e.pth', backbone_path='./backbone/resnet101-63fe2227.pth'):
     """
-    Загружает модель DeepLabV3 из локального файла
+    Загружает модель DeepLabV3 из локальных файлов
     """
     print("Загрузка модели...")
     
-    # Создаем структуру модели без весов
-    model = deeplabv3_resnet101(weights=None)
+    # Переопределяем функцию загрузки для использования локального backbone
+    original_load_state_dict_from_url = torch.hub.load_state_dict_from_url
     
-    # Загружаем веса из локального файла
+    def local_load_state_dict_from_url(url, model_dir=None, map_location=None, progress=True, check_hash=False, file_name=None):
+        if 'resnet101-63fe2227.pth' in url:
+            print(f"Используем локальный backbone: {backbone_path}")
+            return torch.load(backbone_path, map_location=map_location)
+        return original_load_state_dict_from_url(url, model_dir, map_location, progress, check_hash, file_name)
+    
+    torch.hub.load_state_dict_from_url = local_load_state_dict_from_url
+    
+    # Создаем модель
+    model = deeplabv3_resnet101(weights=None, aux_loss=True)
+    
+    # Восстанавливаем оригинальную функцию
+    torch.hub.load_state_dict_from_url = original_load_state_dict_from_url
+    
+    # Загружаем веса DeepLabV3
     if os.path.exists(weights_path):
         state_dict = torch.load(weights_path, map_location=torch.device('cpu'))
         model.load_state_dict(state_dict)
-        print(f"Модель загружена из {weights_path}")
+        print(f"Веса DeepLabV3 загружены из {weights_path}")
     else:
         print(f"Файл весов не найден: {weights_path}")
-        print("Скачайте файл по ссылке:")
-        print("https://download.pytorch.org/models/deeplabv3_resnet101_coco-586e9e4e.pth")
-        print("И поместите его в папку ./weights/")
         exit(1)
     
     model.eval()
@@ -156,8 +161,8 @@ def process_video(input_video, output_video, model):
 
 if __name__ == "__main__":
     # Настройки
-    FILE_NAME = "spb-cam1-short-001.mp4"
-    INPUT_VIDEO = f"data/input/{FILE_NAME}"
+    FILE_NAME = "spb-cam1-short-001"
+    INPUT_VIDEO = f"data/input/{FILE_NAME}.mp4"
     OUTPUT_VIDEO = f"data/output/out-{FILE_NAME}_{time.time()}.mp4"   
     WEIGHTS_PATH = "./weights/deeplabv3_resnet101_coco-586e9e4e.pth"  # 
     
