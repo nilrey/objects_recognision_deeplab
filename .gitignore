@@ -4,3 +4,4 @@ backbone/*
 weights/*
 debug_frames/*
 debug_logs/*
+.kilo/

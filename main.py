@@ -12,10 +12,6 @@ from torchvision.models.segmentation import deeplabv3_resnet101
 
 # ========== 1. ТРЕКЕР (без внешних зависимостей) ==========
 class ObjectTracker:
-    """
-    Простой трекер объектов на основе венгерского алгоритма
-    Не требует установки sort-tracker
-    """
     def __init__(self, max_age=5, min_hits=2, iou_threshold=0.3):
         self.max_age = max_age
         self.min_hits = min_hits
@@ -25,10 +21,6 @@ class ObjectTracker:
         self.frame_count = 0
         
     def update(self, detections):
-        """
-        Обновление трекеров
-        detections: список [x1, y1, x2, y2, class_id, confidence]
-        """
         self.frame_count += 1
         
         # Если нет детекций, обновляем время жизни
@@ -88,7 +80,7 @@ class ObjectTracker:
         return self._get_active_tracks()
     
     def _create_track(self, det):
-        """Создает новый трек"""
+        """Создаем новый трек"""
         track = {
             'id': self.next_id,
             'bbox': det[:4],
@@ -104,7 +96,7 @@ class ObjectTracker:
         self.next_id += 1
     
     def _get_active_tracks(self):
-        """Возвращает активные треки"""
+        """Получаем активные треки"""
         return [t for t in self.tracks if t['hits'] >= self.min_hits and t['age'] <= self.max_age]
     
     def _remove_old_tracks(self):
